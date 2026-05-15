@@ -93,6 +93,21 @@
         .animate-fade-in {
             animation: fade-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
+
+        .dropdown-item {
+            padding: 14px 16px;
+            cursor: pointer;
+            transition: 0.2s;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .dropdown-item:hover {
+            background: rgba(185, 28, 28, 0.25);
+        }
+
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
     </style>
 </head>
 
@@ -122,13 +137,18 @@
 
         <div id="app-content" class="hidden">
             <div class="glass-panel p-6 rounded-2xl mb-8 transition-all hover:border-red-500/50 red-glow">
-                <label for="satker-select"
-                    class="block text-xs font-bold mb-3 text-red-400 uppercase tracking-widest">Pilih Satuan
-                    Kerja</label>
-                <select id="satker-select" onchange="updateDisplay()"
-                    class="select-custom w-full bg-black/60 border border-white/10 p-4 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-red-600 transition-all cursor-pointer font-medium">
-                    <option value="" disabled selected>-- Pilih Satker --</option>
-                </select>
+                <label class="block text-xs font-bold mb-3 text-red-400 uppercase tracking-widest">
+                    Cari Satuan Kerja
+                </label>
+
+                <div class="relative">
+                    <input type="text" id="satker-search" placeholder="Ketik nama satker..." autocomplete="off"
+                        class="w-full bg-black/60 border border-white/10 p-4 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-red-600 transition-all font-medium">
+
+                    <div id="dropdown-list"
+                        class="absolute z-50 mt-2 w-full bg-[#1a1a1a] border border-red-900 rounded-xl max-h-72 overflow-y-auto hidden shadow-2xl">
+                    </div>
+                </div>
             </div>
 
             <div id="error-box"
@@ -431,7 +451,7 @@
 
 
 
-                isiDropdown();
+                initSearchableDropdown();
 
 
                 document
@@ -483,90 +503,24 @@ Gagal ambil data
 
         }
 
-
-
-        /*
-        =================
-        ISI DROPDOWN
-        =================
-        */
-
-        function isiDropdown() {
-
-            let select =
-                document.getElementById(
-                    "satker-select"
-                );
-
-
-            select.innerHTML =
-                `
-<option
-disabled
-selected>
-
--- Pilih Satker --
-
-</option>
-`;
-
-
-            Object.values(
-                database
-            )
-
-                .sort(
-
-                    (a, b) =>
-
-                        a.namaSatker.localeCompare(
-                            b.namaSatker
-                        )
-
-                )
-
-                .forEach(
-
-                    item => {
-
-                        let option =
-                            document.createElement(
-                                "option"
-                            );
-
-                        option.value =
-                            item.namaSatker;
-
-                        option.textContent =
-                            item.namaSatker;
-
-
-                        select.appendChild(
-                            option
-                        );
-
-                    });
-
-
-        }
-
-
-
         /*
         =================
         UPDATE DATA
         =================
         */
 
-        function updateDisplay() {
+        function updateDisplay(pilihan = null) {
 
-            let pilihan =
+            if (!pilihan) {
 
-                document
-                    .getElementById(
-                        "satker-select"
-                    )
-                    .value;
+                pilihan =
+                    document
+                        .getElementById(
+                            "satker-search"
+                        )
+                        .value;
+
+            }
 
 
             let key =
@@ -741,6 +695,125 @@ selected>
         }
 
 
+        /*
+=================
+SEARCHABLE DROPDOWN
+=================
+*/
+
+        let daftarSatker = [];
+
+        function initSearchableDropdown() {
+
+            daftarSatker = Object.values(database)
+                .sort((a, b) =>
+                    a.namaSatker.localeCompare(b.namaSatker)
+                );
+
+            const input =
+                document.getElementById("satker-search");
+
+            const dropdown =
+                document.getElementById("dropdown-list");
+
+
+
+            function renderList(keyword = "") {
+
+                dropdown.innerHTML = "";
+
+                let hasil =
+                    daftarSatker.filter(item =>
+                        item.namaSatker
+                            .toLowerCase()
+                            .includes(
+                                keyword.toLowerCase()
+                            )
+                    );
+
+                if (hasil.length === 0) {
+
+                    dropdown.innerHTML = `
+                <div class="p-4 text-gray-400 text-sm">
+                    Satker tidak ditemukan
+                </div>
+            `;
+
+                } else {
+
+                    hasil.forEach(item => {
+
+                        const div =
+                            document.createElement("div");
+
+                        div.className =
+                            "dropdown-item";
+
+                        div.textContent =
+                            item.namaSatker;
+
+                        div.onclick = () => {
+
+                            input.value =
+                                item.namaSatker;
+
+                            dropdown.classList.add(
+                                "hidden"
+                            );
+
+                            updateDisplay(
+                                item.namaSatker
+                            );
+
+                        };
+
+                        dropdown.appendChild(div);
+
+                    });
+
+                }
+
+                dropdown.classList.remove(
+                    "hidden"
+                );
+
+            }
+
+
+
+            input.addEventListener(
+                "focus",
+                () => renderList(input.value)
+            );
+
+
+
+            input.addEventListener(
+                "input",
+                () => renderList(input.value)
+            );
+
+
+
+            document.addEventListener(
+                "click",
+                (e) => {
+
+                    if (
+                        !input.contains(e.target) &&
+                        !dropdown.contains(e.target)
+                    ) {
+
+                        dropdown.classList.add(
+                            "hidden"
+                        );
+
+                    }
+
+                }
+            );
+
+        }
 
         /*
         =================
