@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Monitoring AMPUH - Badilum</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --badilum-red: #b91c1c;
+            --badilum-dark: #7f1d1d;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at top right, #450a0a, #000000);
+            min-height: 100vh;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        .font-futuristic {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .glass-panel {
+            background: rgba(185, 28, 28, 0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .red-glow {
+            box-shadow: 0 0 20px rgba(185, 28, 28, 0.3);
+        }
+
+        .select-custom {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1.5em;
+        }
+
+        .loading-spinner {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top: 3px solid #dc2626;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(185, 28, 28, 0.5);
+            border-radius: 10px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes fade-in {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fade-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+    </style>
+</head>
+
+<body class="p-4 md:p-8">
+
+    <header class="max-w-6xl mx-auto mb-10 text-center">
+        <div
+            class="inline-block p-2 px-4 mb-4 rounded-full border border-red-500/30 bg-red-500/10 text-[10px] uppercase tracking-[0.3em] font-bold text-red-400">
+            Internal Monitoring System v1.0
+        </div>
+        <h1
+            class="text-3xl md:text-5xl font-futuristic font-bold mb-2 tracking-widest text-red-600 uppercase drop-shadow-[0_0_8px_rgba(220,38,38,0.5)]">
+            Monitoring AMPUH
+        </h1>
+        <p class="text-gray-400 tracking-wide uppercase text-xs md:text-sm">Sertifikasi Mutu Pengadilan Unggul dan
+            Tangguh</p>
+        <div class="h-1 w-24 bg-gradient-to-r from-transparent via-red-600 to-transparent mx-auto mt-6 rounded-full">
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto relative">
+        <div id="main-loader" class="flex flex-col items-center justify-center py-10">
+            <div class="loading-spinner mb-4"></div>
+            <p class="text-xs text-gray-400 uppercase tracking-widest italic text-center px-4">Mengambil Data Terbaru
+                dari Spreadsheet...</p>
+        </div>
+
+        <div id="app-content" class="hidden">
+            <div class="glass-panel p-6 rounded-2xl mb-8 transition-all hover:border-red-500/50 red-glow">
+                <label for="satker-select"
+                    class="block text-xs font-bold mb-3 text-red-400 uppercase tracking-widest">Pilih Satuan
+                    Kerja</label>
+                <select id="satker-select" onchange="updateDisplay()"
+                    class="select-custom w-full bg-black/60 border border-white/10 p-4 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-red-600 transition-all cursor-pointer font-medium">
+                    <option value="" disabled selected>-- Pilih Satker --</option>
+                </select>
+            </div>
+
+            <div id="error-box"
+                class="hidden glass-panel p-8 rounded-2xl border-2 border-red-600/50 text-center mb-8 animate-fade-in">
+                <div class="mb-4 inline-block p-4 bg-red-900/30 rounded-full">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-red-500" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                </div>
+                <h2 class="text-xl font-bold text-white mb-2 font-futuristic uppercase tracking-tight">Data Belum
+                    Tersedia</h2>
+                <p class="text-gray-300">Satker ini tercatat belum mengirimkan eviden.</p>
+            </div>
+
+            <div id="data-container" class="hidden space-y-6 animate-fade-in">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="glass-panel p-6 rounded-2xl border-l-4 border-l-red-600">
+                                <h3 class="text-[10px] font-bold text-red-500 uppercase mb-4 tracking-widest">Identitas
+                                    Satker</h3>
+                                <div class="space-y-4">
+                                    <div>
+                                        <p class="text-gray-500 text-[10px] uppercase font-bold">Asesi</p>
+                                        <p id="display-asesi" class="text-white font-semibold"></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-500 text-[10px] uppercase font-bold">Nama Satker</p>
+                                        <p id="display-nama" class="text-lg font-bold font-futuristic text-white"></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="glass-panel p-6 rounded-2xl border-l-4 border-l-red-600">
+                                <h3 class="text-[10px] font-bold text-red-500 uppercase mb-4 tracking-widest">Ketua Tim
+                                    DC</h3>
+                                <div class="space-y-4">
+                                    <div>
+                                        <p id="display-ketua" class="text-white font-semibold text-base"></p>
+                                        <p id="display-wa-ketua" class="text-green-400 font-mono text-sm"></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="glass-panel p-6 rounded-2xl border-l-4 border-l-red-600">
+                                <h3 class="text-[10px] font-bold text-red-500 uppercase mb-4 tracking-widest">Admin IT
+                                </h3>
+                                <div class="space-y-4">
+                                    <div>
+                                        <p id="display-admin" class="text-white font-semibold text-base"></p>
+                                        <p id="display-wa-admin" class="text-green-400 font-mono text-sm"></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div
+                                class="glass-panel p-6 rounded-2xl border-l-4 border-l-red-600 flex flex-col justify-between">
+                                <h3 class="text-[10px] font-bold text-red-500 uppercase mb-2 tracking-widest">Dokumen
+                                    Eviden</h3>
+                                <a id="display-link" href="#" target="_blank"
+                                    class="block w-full text-center bg-gradient-to-r from-red-800 to-red-600 hover:from-red-700 hover:to-red-500 text-white font-bold py-3 rounded-lg transition-all shadow-lg uppercase text-[10px] tracking-widest">
+                                    Buka Link Eviden
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-1">
+                        <div class="glass-panel p-6 rounded-2xl border-t-4 border-t-red-600 h-full relative">
+                            <h3
+                                class="text-[10px] font-bold text-red-500 uppercase mb-6 tracking-widest flex items-center">
+                                <span class="w-2 h-2 bg-red-600 rounded-full mr-2"></span>
+                                Tim Hatiwasda
+                            </h3>
+                            <div id="hatiwasda-container"
+                                class="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+                                <p class="text-gray-500 text-xs italic">Memuat data tim...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center pt-8">
+                    <p class="text-[9px] text-gray-600 uppercase tracking-[0.3em]">Update Database Real-time
+                        <span id="display-timestamp" class="text-gray-400"></span>
+                    </p>
+                </div>
+            </div>
+            <p class="text-center text-slate-600 text-[14px] mt-10 uppercase tracking-widest">&copy; 2026 DIREKTORAT
+                JENDERAL BADAN PERADILAN UMUM <br /> MAHKAMAH AGUNG REPUBLIK INDONESIA</p>
+
+            <div id="placeholder" class="text-center py-20 opacity-20">
+                <!-- <div class="mb-6 inline-block p-6 border border-red-900 rounded-full">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-red-600" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                    </svg>
+                </div> -->
+
+            </div>
+        </div>
+    </main>
+
+    <script>
+
+        const SHEET_AMPUH =
+            "1zr74Cr0OxvfakoJChJrHm6WeffrIbIKG8fi2cSzMCvE";
+
+        const SHEET_HATIWASDA =
+            "1sZEw_zYzjLf58j-OdFRpbMMw7wOEILRBSKYyMxOCPGY";
+
+
+        const URL_AMPUH =
+            `https://docs.google.com/spreadsheets/d/${SHEET_AMPUH}/gviz/tq?tqx=out:json`;
+
+        const URL_HATIWASDA =
+            `https://docs.google.com/spreadsheets/d/${SHEET_HATIWASDA}/gviz/tq?tqx=out:json`;
+
+
+        let database = {};
+        let databaseHatiwasda = {};
+
+
+        /*
+        =================
+        NORMALISASI KEY
+        =================
+        */
+
+        function normalizeKey(str) {
+
+            return String(str || "")
+                .trim()
+                .toLowerCase()
+                .replace(/\s+/g, " ");
+
+        }
+
+
+
+        async function initApp() {
+
+            try {
+
+                const [res1, res2] =
+                    await Promise.all([
+
+                        fetch(URL_AMPUH),
+                        fetch(URL_HATIWASDA)
+
+                    ]);
+
+
+                const txt1 =
+                    await res1.text();
+
+                const txt2 =
+                    await res2.text();
+
+
+                const json1 =
+                    JSON.parse(
+                        txt1.substring(
+                            47,
+                            txt1.length - 2
+                        )
+                    );
+
+
+                const json2 =
+                    JSON.parse(
+                        txt2.substring(
+                            47,
+                            txt2.length - 2
+                        )
+                    );
+
+
+
+                /*
+                =================
+                DATA AMPUH
+                =================
+                */
+
+                json1.table.rows.forEach(
+
+                    row => {
+
+                        let timestamp =
+                            row.c[0]?.v || "";
+
+                        let asesi =
+                            row.c[1]?.v || "";
+
+                        let pt =
+                            row.c[2]?.v || "";
+
+                        let satker =
+                            row.c[3]?.v || "";
+
+                        let nama =
+                            satker || pt;
+
+                        if (!nama) return;
+
+
+                        let key =
+                            normalizeKey(
+                                nama
+                            );
+
+
+                        database[key] = {
+
+                            namaSatker:
+                                nama,
+
+                            timestamp,
+
+                            asesi,
+
+                            ketua:
+                                row.c[4]?.v || "",
+
+                            waKetua:
+                                row.c[5]?.v || "",
+
+                            admin:
+                                row.c[6]?.v || "",
+
+                            waAdmin:
+                                row.c[7]?.v || "",
+
+                            link:
+                                row.c[8]?.v || ""
+
+                        };
+
+
+                    });
+
+
+
+                /*
+                =================
+                DATA HATIWASDA
+                =================
+                */
+
+                json2.table.rows.forEach(
+
+                    row => {
+
+                        let satker =
+                            normalizeKey(
+                                row.c[1]?.v
+                            ); // kolom B
+
+
+                        if (
+                            !satker
+                        )
+                            return;
+
+
+
+                        if (
+                            !databaseHatiwasda[
+                            satker
+                            ]
+                        ) {
+
+                            databaseHatiwasda[
+                                satker
+                            ] = [];
+
+                        }
+
+
+
+                        databaseHatiwasda[
+                            satker
+                        ]
+                            .push({
+
+                                nama:
+                                    row.c[2]?.v || "-",
+
+                                nip:
+                                    row.c[3]?.v || "-"
+
+                            });
+
+
+                    });
+
+
+
+                isiDropdown();
+
+
+                document
+                    .getElementById(
+                        "main-loader"
+                    )
+                    .classList
+                    .add(
+                        "hidden"
+                    );
+
+
+                document
+                    .getElementById(
+                        "app-content"
+                    )
+                    .classList
+                    .remove(
+                        "hidden"
+                    );
+
+
+            } catch (err) {
+
+                console.log(
+                    err
+                );
+
+                document
+                    .getElementById(
+                        "main-loader"
+                    )
+                    .innerHTML =
+
+                    `
+<p
+class="
+text-red-500
+font-bold
+">
+
+Gagal ambil data
+
+</p>
+
+`;
+
+            }
+
+        }
+
+
+
+        /*
+        =================
+        ISI DROPDOWN
+        =================
+        */
+
+        function isiDropdown() {
+
+            let select =
+                document.getElementById(
+                    "satker-select"
+                );
+
+
+            select.innerHTML =
+                `
+<option
+disabled
+selected>
+
+-- Pilih Satker --
+
+</option>
+`;
+
+
+            Object.values(
+                database
+            )
+
+                .sort(
+
+                    (a, b) =>
+
+                        a.namaSatker.localeCompare(
+                            b.namaSatker
+                        )
+
+                )
+
+                .forEach(
+
+                    item => {
+
+                        let option =
+                            document.createElement(
+                                "option"
+                            );
+
+                        option.value =
+                            item.namaSatker;
+
+                        option.textContent =
+                            item.namaSatker;
+
+
+                        select.appendChild(
+                            option
+                        );
+
+                    });
+
+
+        }
+
+
+
+        /*
+        =================
+        UPDATE DATA
+        =================
+        */
+
+        function updateDisplay() {
+
+            let pilihan =
+
+                document
+                    .getElementById(
+                        "satker-select"
+                    )
+                    .value;
+
+
+            let key =
+                normalizeKey(
+                    pilihan
+                );
+
+
+            let data =
+                database[key];
+
+
+            const errorBox =
+                document
+                    .getElementById(
+                        "error-box"
+                    );
+
+
+            const dataContainer =
+                document
+                    .getElementById(
+                        "data-container"
+                    );
+
+
+
+            if (
+                !data
+            ) {
+
+                errorBox
+                    .classList
+                    .remove(
+                        "hidden"
+                    );
+
+                dataContainer
+                    .classList
+                    .add(
+                        "hidden"
+                    );
+
+                return;
+
+            }
+
+
+
+            errorBox
+                .classList
+                .add(
+                    "hidden"
+                );
+
+
+            dataContainer
+                .classList
+                .remove(
+                    "hidden"
+                );
+
+
+
+            document
+                .getElementById(
+                    "display-nama"
+                )
+                .innerText =
+                pilihan;
+
+
+            document
+                .getElementById(
+                    "display-asesi"
+                )
+                .innerText =
+                data.asesi;
+
+
+            document
+                .getElementById(
+                    "display-ketua"
+                )
+                .innerText =
+                data.ketua;
+
+
+            document
+                .getElementById(
+                    "display-wa-ketua"
+                )
+                .innerText =
+                data.waKetua;
+
+
+            document
+                .getElementById(
+                    "display-admin"
+                )
+                .innerText =
+                data.admin;
+
+
+            document
+                .getElementById(
+                    "display-wa-admin"
+                )
+                .innerText =
+                data.waAdmin;
+
+
+            document
+                .getElementById(
+                    "display-timestamp"
+                )
+                .innerText =
+                data.timestamp;
+
+
+
+            /*
+            LINK EVIDEN
+            */
+
+            const tombol =
+
+                document
+                    .getElementById(
+                        "display-link"
+                    );
+
+
+            if (
+
+                data.link &&
+
+                data.link.startsWith(
+                    "http"
+                )
+
+            ) {
+
+                tombol.href =
+                    data.link;
+
+                tombol.innerText =
+                    "BUKA LINK EVIDEN";
+
+
+            } else {
+
+                tombol.href =
+                    "#";
+
+                tombol.innerText =
+                    "LINK TIDAK ADA";
+
+            }
+
+
+
+            /*
+            HATIWASDA
+            */
+
+            renderHatiwasda(
+                key
+            );
+
+
+        }
+
+
+
+        /*
+        =================
+        RENDER HATIWASDA
+        =================
+        */
+
+        function renderHatiwasda(
+
+            satker
+
+        ) {
+
+            const container =
+
+                document
+                    .getElementById(
+                        "hatiwasda-container"
+                    );
+
+
+            container.innerHTML =
+                "";
+
+
+            let tim =
+                databaseHatiwasda[
+                satker
+                ];
+
+
+
+            if (
+
+                !tim ||
+
+                tim.length === 0
+
+            ) {
+
+                container.innerHTML =
+
+                    `
+
+<div
+class="
+text-center
+py-8
+text-gray-500
+">
+
+Data Hatiwasda
+tidak tersedia
+
+</div>
+
+`;
+
+                return;
+
+            }
+
+
+
+            tim.forEach(
+
+                item => {
+
+
+                    container.innerHTML +=
+
+                        `
+
+<div
+class="
+glass-panel
+p-4
+rounded-xl
+animate-fade-in
+">
+
+<p
+class="
+text-white
+font-bold
+">
+
+${item.nama}
+
+</p>
+
+
+<p
+class="
+text-red-400
+text-xs
+mt-2
+">
+
+NIP
+
+</p>
+
+
+<p
+class="
+text-gray-300
+font-mono
+text-sm
+">
+
+${item.nip}
+
+</p>
+
+
+</div>
+
+`;
+
+
+
+                }
+
+
+            );
+
+
+        }
+
+
+
+        window.onload =
+            initApp;
+
+
+    </script>
+</body>
+
+</html>
